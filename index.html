@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RevisionPad</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #2d2d2d;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #404040;
+        }
+
+        .header-left h1 {
+            color: #4a9eff;
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+
+        .header-left p {
+            color: #aaa;
+            font-size: 1rem;
+        }
+
+        .add-note-btn {
+            background: #4a9eff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            font-weight: 500;
+        }
+
+        .add-note-btn:hover {
+            background: #3a8ae8;
+        }
+
+        .add-note-form {
+            background: #333;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 1px solid #404040;
+            display: none;
+        }
+
+        .add-note-form.active {
+            display: block;
+        }
+
+        .form-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .form-header h2 {
+            color: #4a9eff;
+            font-size: 1.3rem;
+        }
+
+        .close-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .close-btn:hover {
+            background: #ff3742;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #ccc;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #555;
+            border-radius: 6px;
+            font-size: 1rem;
+            background: #404040;
+            color: #e0e0e0;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4a9eff;
+        }
+
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .save-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .save-btn:hover {
+            background: #218838;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #555;
+            border-radius: 6px;
+            background: #404040;
+            color: #e0e0e0;
+            font-size: 1rem;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #4a9eff;
+        }
+
+        .search-box::placeholder {
+            color: #888;
+        }
+
+        .notes-list {
+            margin-top: 20px;
+        }
+
+        .note-item {
+            background: #333;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #404040;
+            overflow: hidden;
+        }
+
+        .note-question {
+            padding: 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #404040;
+        }
+
+        .note-question:hover {
+            background: #3a3a3a;
+        }
+
+        .question-content {
+            display: flex;
+            align-items: center;
+            flex: 1;
+        }
+
+        .note-number {
+            background: #4a9eff;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-right: 12px;
+            min-width: 35px;
+            text-align: center;
+        }
+
+        .note-question h3 {
+            color: #e0e0e0;
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .note-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .note-icon {
+            font-size: 1.2rem;
+            color: #4a9eff;
+            transition: transform 0.2s ease;
+        }
+
+        .note-item.active .note-icon {
+            transform: rotate(45deg);
+        }
+
+        .note-answer {
+            padding: 0 15px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+            background: #2a2a2a;
+        }
+
+        .note-item.active .note-answer {
+            max-height: 400px;
+            padding: 15px;
+        }
+
+        .note-answer p {
+            color: #ccc;
+            line-height: 1.5;
+            margin: 0;
+            white-space: pre-wrap;
+        }
+
+        .delete-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .delete-btn:hover {
+            background: #ff3742;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: #aaa;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .header-left h1 {
+                font-size: 1.5rem;
+            }
+            
+            .note-question {
+                padding: 12px;
+            }
+            
+            .note-answer {
+                padding: 0 12px;
+            }
+            
+            .note-item.active .note-answer {
+                padding: 12px;
+            }
+
+            .note-controls {
+                flex-direction: column;
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>📝 Interview Notes</h1>
+                <p>Your personal revision notes</p>
+            </div>
+            <button class="add-note-btn" id="addNoteBtn">+ Add Note</button>
+        </div>
+
+        <div class="add-note-form" id="addNoteForm">
+            <div class="form-header">
+                <h2>Add New Note</h2>
+                <button class="close-btn" id="closeBtn">✕ Close</button>
+            </div>
+            <form id="noteForm">
+                <div class="form-group">
+                    <label for="question">Question/Topic:</label>
+                    <input type="text" id="question" placeholder="e.g., What is React?" required>
+                </div>
+                <div class="form-group">
+                    <label for="answer">Answer/Notes:</label>
+                    <textarea id="answer" placeholder="Write your notes here..." required></textarea>
+                </div>
+                <button type="submit" class="save-btn">💾 Save Note</button>
+            </form>
+        </div>
+
+        <div class="stats">
+            <span id="noteCount">0 notes</span>
+            <input type="text" id="searchBox" class="search-box" placeholder="🔍 Search your notes..." style="width: 300px;">
+        </div>
+
+        <div class="notes-list" id="notesList">
+            <div class="empty-state">
+                <h3>No notes yet</h3>
+                <p>Click "Add Note" to create your first interview note!</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class InterviewNotes {
+            constructor() {
+                this.notes = [];
+                this.noteForm = document.getElementById('noteForm');
+                this.notesList = document.getElementById('notesList');
+                this.questionInput = document.getElementById('question');
+                this.answerInput = document.getElementById('answer');
+                this.searchBox = document.getElementById('searchBox');
+                this.addNoteBtn = document.getElementById('addNoteBtn');
+                this.addNoteForm = document.getElementById('addNoteForm');
+                this.closeBtn = document.getElementById('closeBtn');
+                this.noteCount = document.getElementById('noteCount');
+                
+                this.init();
+            }
+
+            init() {
+                this.noteForm.addEventListener('submit', (e) => this.handleSubmit(e));
+                this.searchBox.addEventListener('input', (e) => this.handleSearch(e));
+                this.addNoteBtn.addEventListener('click', () => this.showAddForm());
+                this.closeBtn.addEventListener('click', () => this.hideAddForm());
+                this.loadNotes();
+            }
+
+            showAddForm() {
+                this.addNoteForm.classList.add('active');
+                this.questionInput.focus();
+            }
+
+            hideAddForm() {
+                this.addNoteForm.classList.remove('active');
+                this.clearForm();
+            }
+
+            handleSubmit(e) {
+                e.preventDefault();
+                const question = this.questionInput.value.trim();
+                const answer = this.answerInput.value.trim();
+
+                if (question && answer) {
+                    this.addNote(question, answer);
+                    this.hideAddForm();
+                }
+            }
+
+            addNote(question, answer) {
+                const note = {
+                    id: Date.now(),
+                    question: question,
+                    answer: answer,
+                    timestamp: new Date().toLocaleDateString()
+                };
+
+                this.notes.unshift(note);
+                this.updateNoteCount();
+                this.renderNotes();
+            }
+
+            deleteNote(id) {
+                this.notes = this.notes.filter(note => note.id !== id);
+                this.updateNoteCount();
+                this.renderNotes();
+            }
+
+            toggleNote(element) {
+                const isActive = element.classList.contains('active');
+                
+                // Close all other notes
+                document.querySelectorAll('.note-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+
+                // Toggle current note
+                if (!isActive) {
+                    element.classList.add('active');
+                }
+            }
+
+            handleSearch(e) {
+                const searchTerm = e.target.value.toLowerCase();
+                const filteredNotes = this.notes.filter(note => 
+                    note.question.toLowerCase().includes(searchTerm) || 
+                    note.answer.toLowerCase().includes(searchTerm)
+                );
+                this.renderNotes(filteredNotes);
+            }
+
+            updateNoteCount() {
+                const count = this.notes.length;
+                this.noteCount.textContent = `${count} note${count !== 1 ? 's' : ''}`;
+            }
+
+            renderNotes(notesToRender = this.notes) {
+                if (notesToRender.length === 0) {
+                    this.notesList.innerHTML = `
+                        <div class="empty-state">
+                            <h3>No notes found</h3>
+                            <p>Try adding a new note or adjusting your search!</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                this.notesList.innerHTML = notesToRender.map((note, index) => `
+                    <div class="note-item" data-id="${note.id}">
+                        <div class="note-question">
+                            <div class="question-content">
+                                <span class="note-number">${index + 1}</span>
+                                <h3>${this.escapeHtml(note.question)}</h3>
+                            </div>
+                            <div class="note-controls">
+                                <span class="note-icon">+</span>
+                                <button class="delete-btn" onclick="interviewNotes.deleteNote(${note.id})">Delete</button>
+                            </div>
+                        </div>
+                        <div class="note-answer">
+                            <p>${this.escapeHtml(note.answer)}</p>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Add click event listeners to questions
+                document.querySelectorAll('.note-question').forEach(question => {
+                    question.addEventListener('click', (e) => {
+                        if (!e.target.classList.contains('delete-btn')) {
+                            this.toggleNote(question.parentElement);
+                        }
+                    });
+                });
+            }
+
+            clearForm() {
+                this.questionInput.value = '';
+                this.answerInput.value = '';
+            }
+
+            loadNotes() {
+                // Sample notes for demonstration
+                this.notes = [
+                    {
+                        id: 1,
+                        question: "What is the difference between let, const, and var?",
+                        answer: "var: Function-scoped, can be redeclared, hoisted\nlet: Block-scoped, cannot be redeclared, hoisted but not initialized\nconst: Block-scoped, cannot be redeclared or reassigned, hoisted but not initialized",
+                        timestamp: new Date().toLocaleDateString()
+                    },
+                    {
+                        id: 2,
+                        question: "Explain React hooks",
+                        answer: "Hooks are functions that let you use state and other React features in functional components.\n\nCommon hooks:\n- useState: manages state\n- useEffect: handles side effects\n- useContext: consumes context\n- useReducer: manages complex state",
+                        timestamp: new Date().toLocaleDateString()
+                    },
+                    {
+                        id: 3,
+                        question: "What is closure in JavaScript?",
+                        answer: "A closure is the combination of a function and the lexical environment within which that function was declared.\n\nKey points:\n- Inner functions have access to outer function variables\n- Variables persist even after outer function returns\n- Commonly used for data privacy and module patterns",
+                        timestamp: new Date().toLocaleDateString()
+                    }
+                ];
+                this.updateNoteCount();
+                this.renderNotes();
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+        }
+
+        // Initialize the Interview Notes app
+        const interviewNotes = new InterviewNotes();
+    </script>
+</body>
+</html>
